@@ -93,7 +93,7 @@ function M.create_window()
     relative = 'editor',
     style = "minimal",
     border = { " ", " ", " ", " ", " ", " ", " ", " " },
-    title = { { " 󱥚 Jira Board ", "StatusLineTerm" } },
+    title = { { "  Jira Board ", "StatusLineTerm" } },
     title_pos = "center",
     zindex = 45,
   })

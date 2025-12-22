@@ -2,7 +2,7 @@
 
 A Neovim plugin for managing JIRA tasks with a beautiful UI
 
-## Features
+## Features (AI generated)
 
 - 📋 View active sprint tasks
 - 👥 See who is assigned to each task
@@ -16,12 +16,14 @@ A Neovim plugin for managing JIRA tasks with a beautiful UI
 ## TODO
 - [x] Jira sprint board
 - [x] Config
-- [ ] Expand
+- [x] Expand, Collapse
+- [ ] Read task
 - [ ] Log time
 - [ ] Change status
-- [ ] Read task
 - [ ] Comment
 - [ ] Update
 - [ ] Format time
 - [ ] Filter
 - [ ] Backlog
+- [ ] Update UI when terminal size change
+....

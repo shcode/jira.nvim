@@ -6,7 +6,7 @@
 @token = {{JIRA_TOKEN}}
 
 @project = COM
-@issueKey = COM-123
+@issueKey = COM-17801
 
 ### ============================================================================
 ### Authentication Tests
