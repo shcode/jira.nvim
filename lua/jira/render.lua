@@ -260,6 +260,7 @@ local function render_header(view)
   local tabs = {
     { name = "Active Sprint", key = "S" },
     { name = "Backlog", key = "B" },
+    { name = "JQL", key = "J" },
   }
 
   local header = "  "

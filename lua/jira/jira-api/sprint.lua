@@ -118,5 +118,15 @@ function M.get_backlog_issues(project, callback)
   fetch_issues_recursive(project, jql, callback)
 end
 
+-- Get issues by custom JQL
+function M.get_issues_by_jql(project, jql, callback)
+  if not project then
+    if callback then callback(nil, "Project Key is required") end
+    return
+  end
+
+  fetch_issues_recursive(project, jql, callback)
+end
+
 return M
 

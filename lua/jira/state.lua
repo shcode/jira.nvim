@@ -8,6 +8,7 @@ local state = {
   line_map = {},
   project_key = nil,
   current_view = nil,
+  custom_jql = nil,
 }
 
 return state

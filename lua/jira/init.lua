@@ -37,7 +37,14 @@ M.load_view = function(project_key, view_name)
 
   ui.start_loading("Loading " .. view_name .. " for " .. project_key .. "...")
 
-  local fetch_fn = (view_name == "Active Sprint") and sprint.get_active_sprint_issues or sprint.get_backlog_issues
+  local fetch_fn
+  if view_name == "Active Sprint" then
+    fetch_fn = function(pk, cb) sprint.get_active_sprint_issues(pk, cb) end
+  elseif view_name == "Backlog" then
+    fetch_fn = function(pk, cb) sprint.get_backlog_issues(pk, cb) end
+  elseif view_name == "JQL" then
+    fetch_fn = function(pk, cb) sprint.get_issues_by_jql(pk, state.custom_jql, cb) end
+  end
 
   fetch_fn(project_key, function(issues, err)
     if err then
@@ -85,8 +92,17 @@ M.load_view = function(project_key, view_name)
         -- Tab switching
         vim.keymap.set("n", "S", function() require("jira").load_view(state.project_key, "Active Sprint") end, opts)
         vim.keymap.set("n", "B", function() require("jira").load_view(state.project_key, "Backlog") end, opts)
+        vim.keymap.set("n", "J", function() require("jira").prompt_jql() end, opts)
       end)
     end)
+  end)
+end
+
+M.prompt_jql = function()
+  vim.ui.input({ prompt = "JQL: ", default = state.custom_jql or "" }, function(input)
+    if not input or input == "" then return end
+    state.custom_jql = input
+    M.load_view(state.project_key, "JQL")
   end)
 end
 
