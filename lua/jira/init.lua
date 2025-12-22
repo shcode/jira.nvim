@@ -42,6 +42,7 @@ M.setup_keymaps = function()
   vim.keymap.set("n", "B", function() require("jira").load_view(state.project_key, "Backlog") end, opts)
   vim.keymap.set("n", "J", function() require("jira").prompt_jql() end, opts)
   vim.keymap.set("n", "H", function() require("jira").load_view(state.project_key, "Help") end, opts)
+  vim.keymap.set("n", "K", function() require("jira").show_issue_details() end, opts)
 
   -- Actions
   vim.keymap.set("n", "q", function()
@@ -122,6 +123,15 @@ M.prompt_jql = function()
     state.custom_jql = input
     M.load_view(state.project_key, "JQL")
   end)
+end
+
+M.show_issue_details = function()
+  local cursor = api.nvim_win_get_cursor(state.win)
+  local row = cursor[1] - 1
+  local node = state.line_map[row]
+  if not node then return end
+
+  ui.show_issue_details_popup(node)
 end
 
 M.open = function(project_key)

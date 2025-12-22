@@ -297,6 +297,7 @@ function M.render_help(view)
     { k = "S", d = "Switch to Active Sprint" },
     { k = "B", d = "Switch to Backlog" },
     { k = "J", d = "Custom JQL Search" },
+    { k = "K", d = "Show Issue Details (Popup)" },
     { k = "H", d = "Show this Help" },
     { k = "q", d = "Close Board" },
   }

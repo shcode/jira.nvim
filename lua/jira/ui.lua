@@ -193,5 +193,99 @@ function M.stop_loading()
   end
 end
 
+function M.show_issue_details_popup(node)
+  local util = require("jira.util")
+  local lines = {
+    " " .. node.key .. ": " .. (node.summary or ""),
+    " " .. string.rep("━", math.min(60, #node.key + #(node.summary or "") + 2)),
+    string.format(" Status:   %s", node.status or "Unknown"),
+    string.format(" Priority: %s", node.priority or "None"),
+    string.format(" Assignee: %s", node.assignee or "Unassigned"),
+  }
+  
+  local hls = {}
+  -- Header highlight
+  table.insert(hls, { row = 0, col = 1, end_col = 1 + #node.key, hl = "Title" })
+  table.insert(hls, { row = 1, col = 0, end_col = -1, hl = "Comment" })
+
+  local next_row = 2
+  -- Status
+  table.insert(hls, { row = next_row, col = 1, end_col = 10, hl = "Label" })
+  table.insert(hls, { row = next_row, col = 11, end_col = -1, hl = M.get_status_hl(node.status) })
+  next_row = next_row + 1
+  
+  -- Priority
+  table.insert(hls, { row = next_row, col = 1, end_col = 10, hl = "Label" })
+  table.insert(hls, { row = next_row, col = 11, end_col = -1, hl = "Special" })
+  next_row = next_row + 1
+  
+  -- Assignee
+  table.insert(hls, { row = next_row, col = 1, end_col = 10, hl = "Label" })
+  local ass_hl = (node.assignee == nil or node.assignee == "Unassigned") and "JiraAssigneeUnassigned" or "JiraAssignee"
+  table.insert(hls, { row = next_row, col = 11, end_col = -1, hl = ass_hl })
+  next_row = next_row + 1
+
+  if node.story_points then
+    table.insert(lines, string.format(" Points:   %s", node.story_points))
+    table.insert(hls, { row = next_row, col = 1, end_col = 10, hl = "Label" })
+    table.insert(hls, { row = next_row, col = 11, end_col = -1, hl = "JiraStoryPoint" })
+    next_row = next_row + 1
+  end
+  
+  local spent = node.time_spent or 0
+  local estimate = node.time_estimate or 0
+  if spent > 0 or estimate > 0 then
+    table.insert(lines, string.format(" Time:     %s / %s", util.format_time(spent), util.format_time(estimate)))
+    table.insert(hls, { row = next_row, col = 1, end_col = 10, hl = "Label" })
+    table.insert(hls, { row = next_row, col = 11, end_col = -1, hl = "Number" })
+    next_row = next_row + 1
+  end
+
+  local buf = api.nvim_create_buf(false, true)
+  api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  api.nvim_buf_set_option(buf, "modifiable", false)
+  api.nvim_buf_set_option(buf, "bufhidden", "wipe")
+
+  -- Apply highlights
+  for _, h in ipairs(hls) do
+    local end_col = h.end_col
+    if end_col == -1 then
+      end_col = #lines[h.row + 1]
+    end
+    api.nvim_buf_set_extmark(buf, state.ns, h.row, h.col, {
+      end_col = end_col,
+      hl_group = h.hl,
+    })
+  end
+
+  local width = 0
+  for _, l in ipairs(lines) do
+    width = math.max(width, vim.fn.strdisplaywidth(l))
+  end
+  width = width + 2
+  local height = #lines
+
+  local win = api.nvim_open_win(buf, false, {
+    relative = "cursor",
+    width = width,
+    height = height,
+    row = 1,
+    col = 0,
+    style = "minimal",
+    border = "rounded",
+    focusable = false,
+  })
+
+  api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI", "BufLeave" }, {
+    buffer = state.buf,
+    once = true,
+    callback = function()
+      if api.nvim_win_is_valid(win) then
+        api.nvim_win_close(win, true)
+      end
+    end,
+  })
+end
+
 return M
 
