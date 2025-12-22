@@ -15,7 +15,8 @@ M.defaults = {
     base = "",
     email = "",
     token = "",
-    story_point_field = "customfield_10023",
+    -- story_point_field = "customfield_10023",
+    story_point_field = "customfield_10016",
   },
 }
 
