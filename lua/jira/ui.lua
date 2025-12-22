@@ -50,6 +50,9 @@ function M.setup_static_highlights()
   vim.api.nvim_set_hl(0, "JiraStatus", { link = "lualine_a_insert" })
   vim.api.nvim_set_hl(0, "JiraStatusRoot", { link = "lualine_a_insert", bold = true })
 
+  vim.api.nvim_set_hl(0, "JiraTabActive", { link = "CurSearch", bold = true })
+  vim.api.nvim_set_hl(0, "JiraTabInactive", { link = "Search" })
+
   -- Icons
   vim.api.nvim_set_hl(0, "JiraIconBug", { fg = "#f38ba8" })      -- Red
   vim.api.nvim_set_hl(0, "JiraIconStory", { fg = "#a6e3a1" })    -- Green

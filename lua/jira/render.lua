@@ -90,10 +90,10 @@ local function get_time_display_info(spent, estimate)
   local remaining = math.max(0, estimate - spent)
 
   if estimate == 0 and spent > 0 then
-    col1_str = string.format("󱎫 %s", util.format_time(spent))
+    col1_str = string.format("%s", util.format_time(spent))
     col1_hl = "WarningMsg"
   elseif estimate > 0 then
-    col1_str = string.format("󱎫 %s/%s", util.format_time(spent), util.format_time(estimate))
+    col1_str = string.format("%s/%s", util.format_time(spent), util.format_time(estimate))
 
     if remaining > 0 then
       col1_hl = "Comment"
@@ -102,7 +102,7 @@ local function get_time_display_info(spent, estimate)
       if overdue > 0 then
         col1_hl = "Error"
       else
-        col1_str = " " .. util.format_time(spent)
+        col1_str = util.format_time(spent) .. " "
         col1_hl = "exgreen"
       end
     end
@@ -133,7 +133,7 @@ local function get_right_part_info(node, is_root, bar_width)
     local bar, filled = render_progress_bar(spent, estimate, bar_width)
     bar_str = bar
     bar_filled_len = filled
-    time_str = string.format("󱎫 %s/%s", util.format_time(spent), util.format_time(math.max(estimate, spent)))
+    time_str = string.format("%s/%s", util.format_time(spent), util.format_time(math.max(estimate, spent)))
   else
     local spent = node.time_spent or 0
     local estimate = node.time_estimate or 0
@@ -256,19 +256,54 @@ local function render_issue_line(node, depth, row)
   return full_line, highlights
 end
 
+local function render_header(view)
+  local tabs = {
+    { name = "Active Sprint", key = "S" },
+    { name = "Backlog", key = "B" },
+  }
+
+  local header = "  "
+  local hls = {}
+
+  for _, tab in ipairs(tabs) do
+    local is_active = (view == tab.name)
+    local tab_str = string.format(" %s (%s) ", tab.name, tab.key)
+    local start_col = #header
+    header = header .. tab_str .. "  "
+
+    table.insert(hls, {
+      start_col = start_col,
+      end_col = start_col + #tab_str,
+      hl = is_active and "JiraTabActive" or "JiraTabInactive",
+    })
+  end
+
+  api.nvim_buf_set_lines(state.buf, 0, -1, false, { header, "" })
+  for _, h in ipairs(hls) do
+    api.nvim_buf_set_extmark(state.buf, state.ns, 0, h.start_col, {
+      end_col = h.end_col,
+      hl_group = h.hl,
+    })
+  end
+end
+
 -- ---------------------------------------------
 -- Render TREE into buffer
 -- ---------------------------------------------
 ---@param issues JiraIssueNode[]
+---@param view string?
 ---@param depth number?
 ---@param row number?
 ---@return number
-function M.render_issue_tree(issues, depth, row)
+function M.render_issue_tree(issues, view, depth, row)
   depth = depth or 1
-  row = row or 0
+  row = row or 2
 
   if depth == 1 then
     state.line_map = {}
+    if view then
+      render_header(view)
+    end
   end
 
   for i, node in ipairs(issues) do
@@ -282,7 +317,7 @@ function M.render_issue_tree(issues, depth, row)
     row = row + 1
 
     if node.children and #node.children > 0 and node.expanded then
-      row = M.render_issue_tree(node.children, depth + 1, row)
+      row = M.render_issue_tree(node.children, view, depth + 1, row)
     end
   end
 

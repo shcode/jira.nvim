@@ -5,7 +5,7 @@
 @email = {{JIRA_EMAIL}}
 @token = {{JIRA_TOKEN}}
 
-@project = SPAC
+@project = DEV
 @issueKey = COM-17801
 
 ### ============================================================================

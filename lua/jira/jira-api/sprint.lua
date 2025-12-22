@@ -3,13 +3,6 @@ local api = require("jira.jira-api.api")
 local config = require("jira.config")
 local M = {}
 
--- Cache for sprint data
-local cache = {
-  data = nil,
-  timestamp = 0,
-  ttl = 60, -- 60 seconds cache
-}
-
 -- Helper to safely check if a value is not nil/vim.NIL
 local function is_valid(value)
   return value ~= nil and type(value) ~= "userdata"
@@ -30,26 +23,9 @@ local function safe_get(obj, key, subkey)
   return val
 end
 
--- Get current active sprint issues
-function M.get_active_sprint_issues(project, callback)
-  local now = os.time()
-  if cache.data and (now - cache.timestamp) < cache.ttl then
-    if callback then callback(cache.data, nil) end
-    return
-  end
-
-  if not project then
-    if callback then callback(nil, "Project Key is required") end
-    return
-  end
-
-  local jql = string.format(
-    "project = %s AND sprint in openSprints() ORDER BY Rank ASC",
-    project
-  )
-
+local function fetch_issues_recursive(jql, callback)
   local all_issues = {}
-  
+
   local function fetch_page(page_token)
     api.search_issues(jql, page_token, 100, nil, function(result, err)
       if err then
@@ -58,10 +34,8 @@ function M.get_active_sprint_issues(project, callback)
       end
 
       if not result or not result.issues then
-         cache.data = all_issues
-         cache.timestamp = now
-         if callback then callback(all_issues, nil) end
-         return
+        if callback then callback(all_issues, nil) end
+        return
       end
 
       for _, issue in ipairs(result.issues) do
@@ -101,9 +75,7 @@ function M.get_active_sprint_issues(project, callback)
         })
       end
 
-      if result.isLast == true then
-        cache.data = all_issues
-        cache.timestamp = now
+      if not result.nextPageToken or #all_issues >= config.options.jira.limit then
         if callback then callback(all_issues, nil) end
       else
         fetch_page(result.nextPageToken)
@@ -114,10 +86,35 @@ function M.get_active_sprint_issues(project, callback)
   fetch_page("")
 end
 
--- Clear cache
-function M.clear_cache()
-  cache.data = nil
-  cache.timestamp = 0
+-- Get current active sprint issues
+function M.get_active_sprint_issues(project, callback)
+  if not project then
+    if callback then callback(nil, "Project Key is required") end
+    return
+  end
+
+  local jql = string.format(
+    "project = '%s' AND sprint in openSprints() ORDER BY Rank ASC",
+    project
+  )
+
+  fetch_issues_recursive(jql, callback)
+end
+
+-- Get backlog issues
+function M.get_backlog_issues(project, callback)
+  if not project then
+    if callback then callback(nil, "Project Key is required") end
+    return
+  end
+
+  local jql = string.format(
+    "project = '%s' AND (sprint is EMPTY OR sprint not in openSprints()) AND statusCategory != Done ORDER BY Rank ASC",
+    project
+  )
+
+  fetch_issues_recursive(jql, callback)
 end
 
 return M
+

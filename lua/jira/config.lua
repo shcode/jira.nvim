@@ -8,6 +8,7 @@ local M = {}
 ---@field email string Your Jira email
 ---@field token string Your Jira API token
 ---@field story_point_field? string Field ID for story points (default: customfield_10023)
+---@field limit? number Limit of task when call API
 
 ---@type JiraConfig
 M.defaults = {
@@ -15,6 +16,7 @@ M.defaults = {
     base = "",
     email = "",
     token = "",
+    limit = 200,
     -- story_point_field = "customfield_10023", -- company
     story_point_field = "customfield_10035", -- company
     -- story_point_field = "customfield_10016", -- team

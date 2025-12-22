@@ -21,7 +21,7 @@ M.toggle_node = function()
   if node and node.children and #node.children > 0 then
     node.expanded = not node.expanded
     render.clear(state.buf)
-    render.render_issue_tree(state.tree)
+    render.render_issue_tree(state.tree, state.current_view)
     
     local line_count = api.nvim_buf_line_count(state.buf)
     if cursor[1] > line_count then
@@ -29,6 +29,65 @@ M.toggle_node = function()
     end
     api.nvim_win_set_cursor(state.win, cursor)
   end
+end
+
+M.load_view = function(project_key, view_name)
+  state.project_key = project_key
+  state.current_view = view_name
+
+  ui.start_loading("Loading " .. view_name .. " for " .. project_key .. "...")
+
+  local fetch_fn = (view_name == "Active Sprint") and sprint.get_active_sprint_issues or sprint.get_backlog_issues
+
+  fetch_fn(project_key, function(issues, err)
+    if err then
+      vim.schedule(function()
+        ui.stop_loading()
+        vim.notify("Error: " .. err, vim.log.levels.ERROR)
+      end)
+      return
+    end
+
+    -- Fetch Status Colors
+    local api_client = require("jira.jira-api.api")
+    api_client.get_project_statuses(project_key, function(project_statuses, st_err)
+      vim.schedule(function()
+        ui.stop_loading()
+
+        -- Setup UI if not already created
+        if not state.win or not api.nvim_win_is_valid(state.win) then
+          ui.create_window()
+          ui.setup_static_highlights()
+        end
+        
+        if not st_err and project_statuses then
+          ui.setup_highlights(project_statuses)
+        end
+
+        if not issues or #issues == 0 then
+          state.tree = {}
+          render.clear(state.buf)
+          render.render_issue_tree(state.tree, state.current_view)
+          vim.notify("No issues found in " .. view_name .. ".", vim.log.levels.WARN)
+        else
+          state.tree = util.build_issue_tree(issues)
+          render.clear(state.buf)
+          render.render_issue_tree(state.tree, state.current_view)
+          vim.notify("Loaded " .. view_name .. " for " .. project_key, vim.log.levels.INFO)
+        end
+
+        -- Keymaps
+        local opts = { noremap = true, silent = true, buffer = state.buf }
+        vim.keymap.set("n", "o", function() require("jira").toggle_node() end, opts)
+        vim.keymap.set("n", "<CR>", function() require("jira").toggle_node() end, opts)
+        vim.keymap.set("n", "<Tab>", function() require("jira").toggle_node() end, opts)
+
+        -- Tab switching
+        vim.keymap.set("n", "S", function() require("jira").load_view(state.project_key, "Active Sprint") end, opts)
+        vim.keymap.set("n", "B", function() require("jira").load_view(state.project_key, "Backlog") end, opts)
+      end)
+    end)
+  end)
 end
 
 M.open = function(project_key)
@@ -54,51 +113,7 @@ M.open = function(project_key)
      return
   end
 
-  ui.start_loading("Loading Sprint Data for " .. project_key .. "...")
-  
-  sprint.get_active_sprint_issues(project_key, function(issues, err)
-    if err then
-      vim.schedule(function()
-        ui.stop_loading()
-        vim.notify("Error: " .. err, vim.log.levels.ERROR)
-      end)
-      return
-    end
-
-    if not issues or #issues == 0 then
-      vim.schedule(function()
-        ui.stop_loading()
-        vim.notify("No issues in active sprint.", vim.log.levels.WARN)
-      end)
-      return
-    end
-
-    -- Fetch Status Colors
-    local api_client = require("jira.jira-api.api")
-    api_client.get_project_statuses(project_key, function(project_statuses, st_err)
-      vim.schedule(function()
-        ui.stop_loading()
-        
-        -- Setup UI
-        ui.create_window()
-        ui.setup_static_highlights()
-        if not st_err and project_statuses then
-          ui.setup_highlights(project_statuses)
-        end
-
-        state.tree = util.build_issue_tree(issues)
-        render.render_issue_tree(state.tree)
-        
-        -- Keymaps
-        local opts = { noremap = true, silent = true, buffer = state.buf }
-        vim.keymap.set("n", "o", function() require("jira").toggle_node() end, opts)
-        vim.keymap.set("n", "<CR>", function() require("jira").toggle_node() end, opts)
-        vim.keymap.set("n", "<Tab>", function() require("jira").toggle_node() end, opts)
-        
-        vim.notify("Loaded Dashboard for " .. project_key, vim.log.levels.INFO)
-      end)
-    end)
-  end)
+  M.load_view(project_key, "Active Sprint")
 end
 
 return M

@@ -6,6 +6,8 @@ local state = {
   status_hls = {},
   tree = {},
   line_map = {},
+  project_key = nil,
+  current_view = nil,
 }
 
 return state
