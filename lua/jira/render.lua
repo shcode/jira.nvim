@@ -121,6 +121,7 @@ end
 ---@return string col1_str
 ---@return string col1_hl
 ---@return string col2_str
+---@return string bar_str
 ---@return number bar_filled_len
 local function get_right_part_info(node, is_root, bar_width)
   local time_str = ""
@@ -134,7 +135,7 @@ local function get_right_part_info(node, is_root, bar_width)
     local bar, filled = render_progress_bar(spent, estimate, bar_width)
     bar_str = bar
     bar_filled_len = filled
-    time_str = string.format("%s/%s", util.format_time(spent), util.format_time(math.max(estimate, spent)))
+    time_str, time_hl = get_time_display_info(spent, estimate)
   else
     local spent = node.time_spent or 0
     local estimate = node.time_estimate or 0
@@ -209,7 +210,8 @@ local function render_issue_line(node, depth, row)
   local status_pad = string.rep(" ", MAX.STATUS - vim.fn.strdisplaywidth(status))
   local status_str = " " .. status .. status_pad .. " "
 
-  local right_part = string.format("%s  %s%s  %s%s  %s", bar_display, time_str, time_pad, assignee_str, ass_pad, status_str)
+  local right_part = string.format("%s  %s%s  %s%s  %s", bar_display, time_str, time_pad, assignee_str, ass_pad,
+    status_str)
 
   local total_width = api.nvim_win_get_width(state.win or 0)
   local left_width = vim.fn.strdisplaywidth(left)
@@ -262,8 +264,8 @@ end
 local function render_header(view)
   local tabs = {
     { name = "Active Sprint", key = "S" },
-    { name = "JQL", key = "J" },
-    { name = "Help", key = "H" },
+    { name = "JQL",           key = "J" },
+    { name = "Help",          key = "H" },
   }
 
   local header = "  "
@@ -293,9 +295,10 @@ local function render_header(view)
     state.jql_line = #header_lines - 1
     table.insert(hls, { row = state.jql_line, start_col = 4, end_col = 18, hl = "Keyword" })
     table.insert(hls, { row = state.jql_line, start_col = 19, end_col = -1, hl = "String" })
-    
+
     -- Border for JQL line
-    table.insert(hls, { row = state.jql_line, start_col = 2, virt_text = { { "│", "Comment" } }, virt_text_pos = "overlay" })
+    table.insert(hls,
+      { row = state.jql_line, start_col = 2, virt_text = { { "│", "Comment" } }, virt_text_pos = "overlay" })
 
     -- Virtual text hint for JQL input
     table.insert(hls, {
@@ -310,7 +313,8 @@ local function render_header(view)
     })
     table.insert(header_lines, "    ")
     -- Border for empty line
-    table.insert(hls, { row = #header_lines - 1, start_col = 2, virt_text = { { "│", "Comment" } }, virt_text_pos = "overlay" })
+    table.insert(hls,
+      { row = #header_lines - 1, start_col = 2, virt_text = { { "│", "Comment" } }, virt_text_pos = "overlay" })
 
     -- Saved Queries Header
     local sq_line = "    󱔗 Saved Queries:"
@@ -319,19 +323,19 @@ local function render_header(view)
     table.insert(hls, { row = sq_row, start_col = 4, end_col = -1, hl = "Title" })
     -- Border for SQ header
     table.insert(hls, { row = sq_row, start_col = 2, virt_text = { { "│", "Comment" } }, virt_text_pos = "overlay" })
-    
+
     -- Virtual text hint for Saved Queries
     table.insert(hls, {
       row = sq_row,
       start_col = 0,
       virt_text = {
-        { "(Press ", "JiraHelp" },
-        { "<CR>", "JiraKey" },
+        { "(Press ",     "JiraHelp" },
+        { "<CR>",        "JiraKey" },
         { " to apply) ", "JiraHelp" }
       },
       virt_text_pos = "right_align"
     })
-    
+
     -- Saved Queries List
     local config = require("jira.config")
     local queries = config.options.queries or {}
@@ -346,7 +350,7 @@ local function render_header(view)
       local row = #header_lines
       table.insert(header_lines, line)
       state.query_map[row] = name
-      
+
       -- Border for item
       table.insert(hls, { row = row, start_col = 2, virt_text = { { "│", "Comment" } }, virt_text_pos = "overlay" })
 
@@ -377,23 +381,23 @@ function M.render_help(view)
   render_header(view)
   local help_content = {
     { section = "Navigation & View" },
-    { k = "<Tab>", d = "Toggle Node (Expand/Collapse)" },
-    { k = "S, J, H", d = "Switch View (Sprint, JQL, Help)" },
-    { k = "q", d = "Close Board" },
-    { k = "r", d = "Refresh current view" },
-    
+    { k = "<Tab>",                  d = "Toggle Node (Expand/Collapse)" },
+    { k = "S, J, H",                d = "Switch View (Sprint, JQL, Help)" },
+    { k = "q",                      d = "Close Board" },
+    { k = "r",                      d = "Refresh current view" },
+
     { section = "Issue Actions" },
-    { k = "K", d = "Quick Issue Details (Popup)" },
-    { k = "m", d = "Read Task as Markdown" },
-    { k = "gx", d = "Open Task in Browser" },
-    { k = "s", d = "Update Status" },
-    { k = "a", d = "Change Assignee" },
-    { k = "t", d = "Add time" },
+    { k = "K",                      d = "Quick Issue Details (Popup)" },
+    { k = "m",                      d = "Read Task as Markdown" },
+    { k = "gx",                     d = "Open Task in Browser" },
+    { k = "s",                      d = "Update Status" },
+    { k = "a",                      d = "Change Assignee" },
+    { k = "t",                      d = "Add time" },
   }
 
   local lines = { "" }
   local hls = {}
-  
+
   -- Calculate start row based on header size
   local query_count = 0
   if view == "JQL" then

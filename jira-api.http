@@ -5,8 +5,8 @@
 @email = {{JIRA_EMAIL}}
 @token = {{JIRA_TOKEN}}
 
-@project = DEV
-@issueKey = COM-17801
+@project = DEV2
+@issueKey = DEV2-1
 
 ### ============================================================================
 ### Authentication Tests
