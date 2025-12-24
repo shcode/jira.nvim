@@ -401,7 +401,7 @@ function M.render_help(view)
 
     { section = "Issue Actions" },
     { k = "K",                      d = "Quick Issue Details (Popup)" },
-    { k = "m",                      d = "Read Task as Markdown" },
+    { k = "gd",                      d = "Read Task as info" },
     { k = "gx",                     d = "Open Task in Browser" },
     { k = "gs",                     d = "Update Status" },
     { k = "ga",                     d = "Change Assignee" },

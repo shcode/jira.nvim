@@ -90,7 +90,11 @@ require('jira').setup({
 Run the following command to open the Jira board:
 
 ```vim
+"Open board
 :Jira <PROJECT_KEY>
+
+"Open one task view
+:Jira info ISSUE_KEY
 ```
 
 If you don't provide a project key, you will be prompted to enter one.
