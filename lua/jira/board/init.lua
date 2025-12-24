@@ -167,6 +167,11 @@ function M.setup_keymaps()
 end
 
 function M.load_view(project_key, view_name)
+  local old_cursor = nil
+  if state.win and api.nvim_win_is_valid(state.win) and state.current_view == view_name then
+    old_cursor = api.nvim_win_get_cursor(state.win)
+  end
+
   state.project_key = project_key
   state.current_view = view_name
 
@@ -180,6 +185,13 @@ function M.load_view(project_key, view_name)
       state.line_map = {}
       render.clear(state.buf)
       render.render_help(view_name)
+      if old_cursor and state.win and api.nvim_win_is_valid(state.win) then
+        local line_count = api.nvim_buf_line_count(state.buf)
+        if old_cursor[1] > line_count then
+          old_cursor[1] = line_count
+        end
+        api.nvim_win_set_cursor(state.win, old_cursor)
+      end
       M.setup_keymaps()
     end)
     return
@@ -221,6 +233,14 @@ function M.load_view(project_key, view_name)
         if not cached_issues then
           vim.notify("Loaded " .. view_name .. " for " .. project_key, vim.log.levels.INFO)
         end
+      end
+
+      if old_cursor and state.win and api.nvim_win_is_valid(state.win) then
+        local line_count = api.nvim_buf_line_count(state.buf)
+        if old_cursor[1] > line_count then
+          old_cursor[1] = line_count
+        end
+        api.nvim_win_set_cursor(state.win, old_cursor)
       end
 
       M.setup_keymaps()
