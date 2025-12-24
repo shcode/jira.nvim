@@ -15,13 +15,13 @@ end
 
 local function get_palette()
   return {
-    get_theme_color({ "DiagnosticOk", "String", "DiffAdd" }, "fg") or "#a6e3a1", -- Green
-    get_theme_color({ "DiagnosticInfo", "Function", "DiffChange" }, "fg") or "#89b4fa", -- Blue
-    get_theme_color({ "DiagnosticWarn", "WarningMsg", "Todo" }, "fg") or "#f9e2af", -- Yellow
+    get_theme_color({ "DiagnosticOk", "String", "DiffAdd" }, "fg") or "#a6e3a1",         -- Green
+    get_theme_color({ "DiagnosticInfo", "Function", "DiffChange" }, "fg") or "#89b4fa",  -- Blue
+    get_theme_color({ "DiagnosticWarn", "WarningMsg", "Todo" }, "fg") or "#f9e2af",      -- Yellow
     get_theme_color({ "DiagnosticError", "ErrorMsg", "DiffDelete" }, "fg") or "#f38ba8", -- Red
-    get_theme_color({ "Special", "Constant" }, "fg") or "#cba6f7", -- Magenta
-    get_theme_color({ "Identifier", "PreProc" }, "fg") or "#89dceb", -- Cyan
-    get_theme_color({ "Cursor", "CursorIM" }, "fg") or "#524f67", -- Grey
+    get_theme_color({ "Special", "Constant" }, "fg") or "#cba6f7",                       -- Magenta
+    get_theme_color({ "Identifier", "PreProc" }, "fg") or "#89dceb",                     -- Cyan
+    get_theme_color({ "Cursor", "CursorIM" }, "fg") or "#524f67",                        -- Grey
   }
 end
 
@@ -48,26 +48,32 @@ function M.get_status_hl(status_name)
   if name_upper:find("READY FOR DEV") or name_upper:find("READY FOR TEST") then
     color = palette[7] -- Grey
   elseif
-    name_upper:find("DONE")
-    or name_upper:find("RESOLVED")
-    or name_upper:find("CLOSED")
-    or name_upper:find("FINISHED")
+      name_upper:find("DONE")
+      or name_upper:find("RESOLVED")
+      or name_upper:find("CLOSED")
+      or name_upper:find("FINISHED")
   then
     color = palette[1] -- Green
+  elseif name_upper:find("DEVELOPMENT") then
+    color = palette[6] -- Cyan
   elseif
-    name_upper:find("PROGRESS")
-    or name_upper:find("DEVELOPMENT")
-    or name_upper:find("BUILDING")
-    or name_upper:find("WORKING")
+      name_upper:find("PROGRESS")
+      or name_upper:find("BUILDING")
+      or name_upper:find("WORKING")
   then
     color = palette[3] -- Yellow
-  elseif name_upper:find("TODO") or name_upper:find("OPEN") or name_upper:find("BACKLOG") then
+  elseif
+      name_upper:find("TODO")
+      or name_upper:find("TO DO")
+      or name_upper:find("OPEN")
+      or name_upper:find("BACKLOG")
+  then
     color = palette[2] -- Blue
   elseif
-    name_upper:find("BLOCK")
-    or name_upper:find("REJECT")
-    or name_upper:find("BUG")
-    or name_upper:find("ERROR")
+      name_upper:find("BLOCK")
+      or name_upper:find("REJECT")
+      or name_upper:find("BUG")
+      or name_upper:find("ERROR")
   then
     color = palette[4] -- Red
   elseif name_upper:find("REVIEW") or name_upper:find("QA") or name_upper:find("TEST") then
