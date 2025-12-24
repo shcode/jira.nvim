@@ -7,7 +7,8 @@ local render = require("jira.board.render")
 local util = require("jira.common.util")
 local helper = require("jira.board.helper")
 local sprint = require("jira.jira-api.sprint")
-local ui = require("jira.common.ui")
+local common_ui = require("jira.common.ui")
+local board_ui = require("jira.board.ui")
 
 function M.refresh_view()
   local cache_key = helper.get_cache_key(state.project_key, state.current_view)
@@ -64,7 +65,7 @@ function M.handle_cr()
 end
 
 function M.prompt_jql()
-  ui.open_jql_input(state.custom_jql or "", function(input)
+  board_ui.open_jql_input(state.custom_jql or "", function(input)
     state.custom_jql = input
     state.current_query = "Custom JQL"
     M.load_view(state.project_key, "JQL")
@@ -103,7 +104,8 @@ function M.setup_keymaps()
   local opts = { noremap = true, silent = true, buffer = state.buf }
 
   -- Clear existing buffer keymaps
-  local keys_to_clear = { "o", "S", "B", "J", "H", "K", "m", "gx", "r", "q", "gs", "ga", "gw", "gb", "<Esc>", "s", "a", "t", "co" }
+  local keys_to_clear = { "o", "S", "B", "J", "H", "K", "m", "gx", "r", "q", "gs", "ga", "gw", "gb", "<Esc>", "s", "a",
+    "t", "co" }
   for _, k in ipairs(keys_to_clear) do
     pcall(vim.api.nvim_buf_del_keymap, state.buf, "n", k)
   end
@@ -178,8 +180,8 @@ function M.load_view(project_key, view_name)
   if view_name == "Help" then
     vim.schedule(function()
       if not state.win or not api.nvim_win_is_valid(state.win) then
-        ui.create_window()
-        ui.setup_static_highlights()
+        board_ui.create_window()
+        util.setup_static_highlights()
       end
       state.tree = {}
       state.line_map = {}
@@ -213,12 +215,12 @@ function M.load_view(project_key, view_name)
 
   local function process_issues(issues)
     vim.schedule(function()
-      ui.stop_loading()
+      common_ui.stop_loading()
 
       -- Setup UI if not already created
       if not state.win or not api.nvim_win_is_valid(state.win) then
-        ui.create_window()
-        ui.setup_static_highlights()
+        board_ui.create_window()
+        util.setup_static_highlights()
       end
 
       if not issues or #issues == 0 then
@@ -252,7 +254,7 @@ function M.load_view(project_key, view_name)
     return
   end
 
-  ui.start_loading("Loading " .. view_name .. " for " .. project_key .. "...")
+  common_ui.start_loading("Loading " .. view_name .. " for " .. project_key .. "...")
 
   local fetch_fn
   if view_name == "Active Sprint" then
@@ -268,7 +270,7 @@ function M.load_view(project_key, view_name)
   fetch_fn(project_key, function(issues, err)
     if err then
       vim.schedule(function()
-        ui.stop_loading()
+        common_ui.stop_loading()
         vim.notify("Error: " .. err, vim.log.levels.ERROR)
       end)
       return
@@ -285,7 +287,7 @@ function M.show_issue_details()
     return
   end
 
-  ui.show_issue_details_popup(node)
+  board_ui.show_issue_details_popup(node)
 end
 
 function M.change_status()
@@ -294,11 +296,11 @@ function M.change_status()
     return
   end
 
-  ui.start_loading("Fetching transitions for " .. node.key .. "...")
+  common_ui.start_loading("Fetching transitions for " .. node.key .. "...")
   local jira_api = require("jira.jira-api.api")
   jira_api.get_transitions(node.key, function(transitions, err)
     vim.schedule(function()
-      ui.stop_loading()
+      common_ui.stop_loading()
       if err then
         vim.notify("Error fetching transitions: " .. err, vim.log.levels.ERROR)
         return
@@ -322,10 +324,10 @@ function M.change_status()
         end
         local transition_id = id_map[choice]
 
-        ui.start_loading("Updating status to " .. choice .. "...")
+        common_ui.start_loading("Updating status to " .. choice .. "...")
         jira_api.transition_issue(node.key, transition_id, function(_, t_err)
           vim.schedule(function()
-            ui.stop_loading()
+            common_ui.stop_loading()
             if t_err then
               vim.notify("Error updating status: " .. t_err, vim.log.levels.ERROR)
               return
@@ -355,19 +357,19 @@ function M.change_assignee()
     end
 
     if choice == "Assign to Me" then
-      ui.start_loading("Fetching your account info...")
+      common_ui.start_loading("Fetching your account info...")
       jira_api.get_myself(function(me, m_err)
         vim.schedule(function()
-          ui.stop_loading()
+          common_ui.stop_loading()
           if m_err or not me or not me.accountId then
             vim.notify("Error fetching account info: " .. (m_err or "Unknown error"), vim.log.levels.ERROR)
             return
           end
 
-          ui.start_loading("Assigning " .. node.key .. " to you...")
+          common_ui.start_loading("Assigning " .. node.key .. " to you...")
           jira_api.assign_issue(node.key, me.accountId, function(_, a_err)
             vim.schedule(function()
-              ui.stop_loading()
+              common_ui.stop_loading()
               if a_err then
                 vim.notify("Error assigning issue: " .. a_err, vim.log.levels.ERROR)
                 return
@@ -379,10 +381,10 @@ function M.change_assignee()
         end)
       end)
     elseif choice == "Unassign" then
-      ui.start_loading("Unassigning " .. node.key .. "...")
-      jira_api.assign_issue(node.key, "-1", function(success, a_err)
+      common_ui.start_loading("Unassigning " .. node.key .. "...")
+      jira_api.assign_issue(node.key, "-1", function(_, a_err)
         vim.schedule(function()
-          ui.stop_loading()
+          common_ui.stop_loading()
           if a_err then
             vim.notify("Error unassigning issue: " .. a_err, vim.log.levels.ERROR)
             return
@@ -427,10 +429,10 @@ function M.log_time()
     local time_string = value .. "h"
 
     vim.ui.input({ prompt = "Comment (optional): " }, function(comment)
-      ui.start_loading("Updating time log...")
+      common_ui.start_loading("Updating time log...")
       jira_api.add_worklog(node.key, time_string, comment, function(_, err)
         vim.schedule(function()
-          ui.stop_loading()
+          common_ui.stop_loading()
           if err then
             vim.notify("Error logging time: " .. err, vim.log.levels.ERROR)
             return

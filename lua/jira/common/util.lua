@@ -265,5 +265,62 @@ function M.markdown_to_adf(text)
   return doc
 end
 
+---@param groups string[]
+---@param attr string
+---@return string|nil color
+function M.get_theme_color(groups, attr)
+  for _, g in ipairs(groups) do
+    local hl = vim.api.nvim_get_hl(0, { name = g, link = false })
+    if hl and hl[attr] then
+      return ("#%06x"):format(hl[attr])
+    end
+  end
+end
+
+function M.get_palette()
+  return {
+    M.get_theme_color({ "DiagnosticOk", "String", "DiffAdd" }, "fg") or "#a6e3a1",         -- Green
+    M.get_theme_color({ "DiagnosticInfo", "Function", "DiffChange" }, "fg") or "#89b4fa",  -- Blue
+    M.get_theme_color({ "DiagnosticWarn", "WarningMsg", "Todo" }, "fg") or "#f9e2af",      -- Yellow
+    M.get_theme_color({ "DiagnosticError", "ErrorMsg", "DiffDelete" }, "fg") or "#f38ba8", -- Red
+    M.get_theme_color({ "Special", "Constant" }, "fg") or "#cba6f7",                       -- Magenta
+    M.get_theme_color({ "Identifier", "PreProc" }, "fg") or "#89dceb",                     -- Cyan
+    M.get_theme_color({ "Cursor", "CursorIM" }, "fg") or "#524f67",                        -- Grey
+  }
+end
+
+function M.setup_static_highlights()
+  ---@type table<string, vim.api.keyset.highlight>
+  local hl = {
+    JiraTopLevel = { link = "CursorLineNr", bold = true },
+    JiraSubTask = { link = "Identifier" },
+    JiraStoryPoint = { link = "Error", bold = true },
+    JiraAssignee = { link = "MoreMsg" },
+    JiraAssigneeUnassigned = { link = "Comment", italic = true },
+    exgreen = { fg = "#a6e3a1" },
+    JiraProgressBar = { link = "Function" },
+    JiraStatus = { link = "lualine_a_insert" },
+    JiraStatusRoot = { link = "lualine_a_insert", bold = true },
+    JiraTabActive = { link = "CurSearch", bold = true },
+    JiraTabInactive = { link = "Search" },
+    JiraSubTabActive = { link = "Visual", bold = true },
+    JiraSubTabInactive = { link = "StatusLineNC" },
+    JiraHelp = { link = "Comment", italic = true },
+    JiraKey = { link = "Special", bold = true },
+    JiraIconBug = { fg = "#f38ba8" },
+    JiraIconStory = { fg = "#a6e3a1" },
+    JiraIconTask = { fg = "#89b4fa" },
+    JiraIconSubTask = { fg = "#94e2d5" },
+    JiraIconTest = { fg = "#fab387" },
+    JiraIconDesign = { fg = "#cba6f7" },
+    JiraIconOverhead = { fg = "#9399b2" },
+    JiraIconImp = { fg = "#89dceb" },
+  }
+
+  for name, opts in pairs(hl) do
+    vim.api.nvim_set_hl(0, name, opts)
+  end
+end
+
 return M
 -- vim: set ts=2 sts=2 sw=2 et ai si sta:

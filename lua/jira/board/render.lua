@@ -1,6 +1,6 @@
 local state = require("jira.board.state")
 local util = require("jira.common.util")
-local ui = require("jira.common.ui")
+local ui = require("jira.board.ui")
 
 local MAX = {
   TITLE = 60,

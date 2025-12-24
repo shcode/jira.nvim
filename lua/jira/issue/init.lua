@@ -1,7 +1,7 @@
 local state = require("jira.issue.state")
 local render = require("jira.issue.render")
 local jira_api = require("jira.jira-api.api")
-local ui = require("jira.common.ui")
+local common_ui = require("jira.common.ui")
 local util = require("jira.common.util")
 
 local function setup_keymaps()
@@ -77,20 +77,20 @@ local function setup_keymaps()
 
       vim.cmd("stopinsert")
       vim.api.nvim_win_close(win, true)
-      ui.start_loading("Adding comment...")
+      common_ui.start_loading("Adding comment...")
       jira_api.add_comment(state.issue.key, input, function(_, err)
         vim.schedule(function()
-          ui.stop_loading()
+          common_ui.stop_loading()
           if err then
             vim.notify("Error adding comment: " .. err, vim.log.levels.ERROR)
             return
           end
 
           -- Refresh comments
-          ui.start_loading("Refreshing comments...")
+          common_ui.start_loading("Refreshing comments...")
           jira_api.get_comments(state.issue.key, function(comments, c_err)
             vim.schedule(function()
-              ui.stop_loading()
+              common_ui.stop_loading()
               if not c_err then
                 state.comments = comments
                 render.render_content()
@@ -155,20 +155,20 @@ local function setup_keymaps()
 
       vim.cmd("stopinsert")
       vim.api.nvim_win_close(win, true)
-      ui.start_loading("Updating comment...")
+      common_ui.start_loading("Updating comment...")
       jira_api.edit_comment(state.issue.key, target_comment.id, input, function(_, err)
         vim.schedule(function()
-          ui.stop_loading()
+          common_ui.stop_loading()
           if err then
             vim.notify("Error updating comment: " .. err, vim.log.levels.ERROR)
             return
           end
 
           -- Refresh comments
-          ui.start_loading("Refreshing comments...")
+          common_ui.start_loading("Refreshing comments...")
           jira_api.get_comments(state.issue.key, function(comments, c_err)
             vim.schedule(function()
-              ui.stop_loading()
+              common_ui.stop_loading()
               if not c_err then
                 state.comments = comments
                 render.render_content()
@@ -194,8 +194,8 @@ local M = {}
 ---@param initial_tab? string
 function M.open(issue_key, initial_tab)
   local prev_win = vim.api.nvim_get_current_win()
-  ui.setup_static_highlights()
-  ui.start_loading("Fetching task " .. issue_key .. "...")
+  util.setup_static_highlights()
+  common_ui.start_loading("Fetching task " .. issue_key .. "...")
 
   -- Reset state
   state.issue = nil
@@ -208,7 +208,7 @@ function M.open(issue_key, initial_tab)
   jira_api.get_issue(issue_key, function(issue, err)
     if err then
       vim.schedule(function()
-        ui.stop_loading()
+        common_ui.stop_loading()
         vim.notify("Error fetching issue: " .. err, vim.log.levels.ERROR)
       end)
       return
@@ -216,7 +216,7 @@ function M.open(issue_key, initial_tab)
 
     jira_api.get_comments(issue_key, function(comments, c_err)
       vim.schedule(function()
-        ui.stop_loading()
+        common_ui.stop_loading()
         if c_err then
           vim.notify("Error fetching comments: " .. c_err, vim.log.levels.WARN)
         end
