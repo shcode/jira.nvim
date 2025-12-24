@@ -26,6 +26,21 @@ A Neovim plugin for managing JIRA tasks with a beautiful UI.
 
 ---
 
+## Install
+
+### `lazy.nvim`
+
+```lua
+{
+  "letieu/jira.nvim",
+  opts = {
+    -- Your setup options...
+  },
+}
+```
+
+---
+
 ## Configuration
 
 ```lua
