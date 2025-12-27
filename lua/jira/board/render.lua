@@ -414,6 +414,7 @@ function M.render_help(view)
     { section = "Issue Actions" },
     { k = "K", d = "Quick Issue Details (Popup)" },
     { k = "gd", d = "Read Task as info" },
+    { k = "gf", d = "Fetch Issue by Key" },
     { k = "gx", d = "Open Task in Browser" },
     { k = "gs", d = "Update Status" },
     { k = "ga", d = "Change Assignee" },

@@ -178,6 +178,14 @@ function M.setup_keymaps()
   vim.keymap.set("n", "gd", function()
     require("jira.board").read_task()
   end, opts)
+  vim.keymap.set("n", "gf", function()
+    vim.ui.input({ prompt = "Issue Key: " }, function(input)
+      if not input or input == "" then
+        return
+      end
+      require("jira.issue").open(input)
+    end)
+  end, opts)
   vim.keymap.set("n", "gx", function()
     require("jira.board").open_in_browser()
   end, opts)

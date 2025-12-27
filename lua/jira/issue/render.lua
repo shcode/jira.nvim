@@ -178,12 +178,13 @@ function M.render_content()
   elseif state.active_tab == "help" then
     local help_content = {
       { section = "Navigation" },
-      { k = "D", d = "Switch to Description" },
-      { k = "C", d = "Switch to Comments" },
-      { k = "H", d = "Switch to Help" },
+      { k = "1, 2, 3", d = "Switch to Description/Comments/Help" },
+      { k = "<Tab>", d = "Cycle through tabs" },
       { k = "q", d = "Close Window" },
 
       { section = "Actions" },
+      { k = "R", d = "Refresh issue (clear cache)" },
+      { k = "gf", d = "Refetch current issue (bypass cache)" },
       { k = "i", d = "Add Comment (in Comments tab)" },
       { k = "r", d = "Edit Comment (in Comments tab)" },
     }
